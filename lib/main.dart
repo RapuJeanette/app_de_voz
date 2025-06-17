@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() => runApp(VoiceApp());
 
@@ -11,7 +13,7 @@ class VoiceApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'App de Voz',
+      title: 'Control de Luces',
       home: VoiceHomePage(),
       debugShowCheckedModeBanner: false,
     );
@@ -29,7 +31,10 @@ class _VoiceHomePageState extends State<VoiceHomePage> {
   late stt.SpeechToText _speech;
   bool _isListening = false;
   String _text = '';
+  String _respuestaBot = ''; // 🔹 respuesta desde Dialogflow
   final FlutterTts _flutterTts = FlutterTts();
+
+  final String dialogflowToken = 'TU_TOKEN_DE_DIALOGFLOW'; // 🔹 Pon tu token aquí
 
   @override
   void initState() {
@@ -52,9 +57,8 @@ class _VoiceHomePageState extends State<VoiceHomePage> {
             _text = result.recognizedWords;
           });
         },
-        // ignore: deprecated_member_use
         listenMode: stt.ListenMode.dictation,
-        localeId: 'es_ES', // Cambia a 'en_US' para inglés
+        localeId: 'es_ES',
       );
     }
   }
@@ -63,13 +67,39 @@ class _VoiceHomePageState extends State<VoiceHomePage> {
     await _speech.stop();
     setState(() => _isListening = false);
 
-    // Espera 2 segundos antes de hablar
-    Future.delayed(Duration(seconds: 1), () {
-      if (_text.trim().isNotEmpty) {
-        _speakText(_text);
-      }
-    });
+    if (_text.trim().isNotEmpty) {
+      _enviarADialogflow(_text);
+    }
   }
+
+  Future<void> _enviarADialogflow(String texto) async {
+  final response = await http.post(
+    Uri.parse('http://192.168.0.14:5000/dialogflow'), // Si usas emulador Android
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: json.encode({
+      "mensaje": texto
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    final data = json.decode(response.body);
+    final resultado = data['respuesta'];
+
+    setState(() {
+      _respuestaBot = resultado ?? "No hubo respuesta.";
+    });
+
+    _speakText(_respuestaBot);
+  } else {
+    setState(() {
+      _respuestaBot = "Error al conectar con el backend.";
+    });
+    _speakText(_respuestaBot);
+  }
+}
+
 
   void _speakText(String text) async {
     await _flutterTts.setLanguage('es-ES');
@@ -80,17 +110,28 @@ class _VoiceHomePageState extends State<VoiceHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('App de Voz')),
+      appBar: AppBar(title: Text('Control de Luces por Voz')),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
             Expanded(
               child: Center(
-                child: Text(
-                  _text.isEmpty ? 'Presiona y habla...' : _text,
-                  style: TextStyle(fontSize: 24),
-                  textAlign: TextAlign.center,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _text.isEmpty ? 'Presiona y habla...' : '📣 Tú: $_text',
+                      style: TextStyle(fontSize: 20),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      _respuestaBot.isEmpty ? '' : '🤖 Bot: $_respuestaBot',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -110,17 +151,11 @@ class _VoiceHomePageState extends State<VoiceHomePage> {
                   ),
                 ),
                 SizedBox(width: 20),
-                if (_text.trim().isNotEmpty)
+                if (_respuestaBot.trim().isNotEmpty)
                   ElevatedButton.icon(
-                    onPressed: () => _speakText(_text),
+                    onPressed: () => _speakText(_respuestaBot),
                     icon: Icon(Icons.replay),
                     label: Text("Repetir"),
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 15,
-                      ),
-                    ),
                   ),
               ],
             ),
