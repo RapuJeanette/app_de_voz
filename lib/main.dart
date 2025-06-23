@@ -5,7 +5,13 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-void main() => runApp(VoiceApp());
+import 'background_service.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeService(); // Inicializa el servicio al arrancar
+  runApp(const VoiceApp());
+}
 
 class VoiceApp extends StatelessWidget {
   const VoiceApp({super.key});
@@ -14,7 +20,7 @@ class VoiceApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Control de Luces',
-      home: VoiceHomePage(),
+      home: const VoiceHomePage(),
       debugShowCheckedModeBanner: false,
     );
   }
@@ -24,17 +30,15 @@ class VoiceHomePage extends StatefulWidget {
   const VoiceHomePage({super.key});
 
   @override
-  _VoiceHomePageState createState() => _VoiceHomePageState();
+  State<VoiceHomePage> createState() => _VoiceHomePageState();
 }
 
 class _VoiceHomePageState extends State<VoiceHomePage> {
   late stt.SpeechToText _speech;
   bool _isListening = false;
   String _text = '';
-  String _respuestaBot = ''; // 🔹 respuesta desde Dialogflow
+  String _respuestaBot = '';
   final FlutterTts _flutterTts = FlutterTts();
-
-  final String dialogflowToken = 'TU_TOKEN_DE_DIALOGFLOW'; // 🔹 Pon tu token aquí
 
   @override
   void initState() {
@@ -57,6 +61,7 @@ class _VoiceHomePageState extends State<VoiceHomePage> {
             _text = result.recognizedWords;
           });
         },
+        // ignore: deprecated_member_use
         listenMode: stt.ListenMode.dictation,
         localeId: 'es_ES',
       );
@@ -73,33 +78,30 @@ class _VoiceHomePageState extends State<VoiceHomePage> {
   }
 
   Future<void> _enviarADialogflow(String texto) async {
-  final response = await http.post(
-    Uri.parse('http://192.168.0.14:5000/dialogflow'), // Si usas emulador Android
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: json.encode({
-      "mensaje": texto
-    }),
-  );
+    final response = await http.post(
+      Uri.parse('http://192.168.0.100:5000/dialogflow'), // Cambia esto por tu IP o backend
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({"mensaje": texto}),
+    );
 
-  if (response.statusCode == 200) {
-    final data = json.decode(response.body);
-    final resultado = data['respuesta'];
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final resultado = data['respuesta'];
 
-    setState(() {
-      _respuestaBot = resultado ?? "No hubo respuesta.";
-    });
+      setState(() {
+        _respuestaBot = resultado ?? "No hubo respuesta.";
+      });
 
-    _speakText(_respuestaBot);
-  } else {
-    setState(() {
-      _respuestaBot = "Error al conectar con el backend.";
-    });
-    _speakText(_respuestaBot);
+      _speakText(_respuestaBot);
+    } else {
+      setState(() {
+        _respuestaBot = "Error al conectar con el backend.";
+      });
+      _speakText(_respuestaBot);
+    }
   }
-}
-
 
   void _speakText(String text) async {
     await _flutterTts.setLanguage('es-ES');
@@ -110,7 +112,7 @@ class _VoiceHomePageState extends State<VoiceHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Control de Luces por Voz')),
+      appBar: AppBar(title: const Text('Control de Luces por Voz')),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -122,13 +124,13 @@ class _VoiceHomePageState extends State<VoiceHomePage> {
                   children: [
                     Text(
                       _text.isEmpty ? 'Presiona y habla...' : '📣 Tú: $_text',
-                      style: TextStyle(fontSize: 20),
+                      style: const TextStyle(fontSize: 20),
                       textAlign: TextAlign.center,
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     Text(
                       _respuestaBot.isEmpty ? '' : '🤖 Bot: $_respuestaBot',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -142,20 +144,20 @@ class _VoiceHomePageState extends State<VoiceHomePage> {
                   onLongPress: _startListening,
                   onLongPressUp: _stopListening,
                   child: Container(
-                    padding: EdgeInsets.all(25),
+                    padding: const EdgeInsets.all(25),
                     decoration: BoxDecoration(
                       color: _isListening ? Colors.red : Colors.blue,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.mic, color: Colors.white, size: 40),
+                    child: const Icon(Icons.mic, color: Colors.white, size: 40),
                   ),
                 ),
-                SizedBox(width: 20),
+                const SizedBox(width: 20),
                 if (_respuestaBot.trim().isNotEmpty)
                   ElevatedButton.icon(
                     onPressed: () => _speakText(_respuestaBot),
-                    icon: Icon(Icons.replay),
-                    label: Text("Repetir"),
+                    icon: const Icon(Icons.replay),
+                    label: const Text("Repetir"),
                   ),
               ],
             ),
