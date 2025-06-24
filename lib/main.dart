@@ -2,14 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import './services/backend_service.dart'; // Importa el servicio simulado
 
-import 'background_service.dart';
-
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await initializeService(); // Inicializa el servicio al arrancar
+void main() {
   runApp(const VoiceApp());
 }
 
@@ -35,6 +30,7 @@ class VoiceHomePage extends StatefulWidget {
 
 class _VoiceHomePageState extends State<VoiceHomePage> {
   late stt.SpeechToText _speech;
+  bool _focoEncendido = false;
   bool _isListening = false;
   String _text = '';
   String _respuestaBot = '';
@@ -77,31 +73,17 @@ class _VoiceHomePageState extends State<VoiceHomePage> {
     }
   }
 
-  Future<void> _enviarADialogflow(String texto) async {
-    final response = await http.post(
-      Uri.parse('http://192.168.0.100:5000/dialogflow'), // Cambia esto por tu IP o backend
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: json.encode({"mensaje": texto}),
-    );
+Future<void> _enviarADialogflow(String texto) async {
+  final resultado = await BackendService.enviarTexto(texto);
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      final resultado = data['respuesta'];
+  setState(() {
+    _respuestaBot = resultado["respuesta"];
+    _focoEncendido = resultado["estado"];
+  });
 
-      setState(() {
-        _respuestaBot = resultado ?? "No hubo respuesta.";
-      });
+  _speakText(_respuestaBot);
+}
 
-      _speakText(_respuestaBot);
-    } else {
-      setState(() {
-        _respuestaBot = "Error al conectar con el backend.";
-      });
-      _speakText(_respuestaBot);
-    }
-  }
 
   void _speakText(String text) async {
     await _flutterTts.setLanguage('es-ES');
@@ -122,6 +104,12 @@ class _VoiceHomePageState extends State<VoiceHomePage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Icon(
+                      Icons.lightbulb,
+                      size: 100,
+                      color: _focoEncendido ? Colors.yellow : Colors.grey,
+                    ),
+                    const SizedBox(height: 20),
                     Text(
                       _text.isEmpty ? 'Presiona y habla...' : '📣 Tú: $_text',
                       style: const TextStyle(fontSize: 20),

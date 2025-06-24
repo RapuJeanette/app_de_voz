@@ -1,35 +1,40 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-class BackendResponse {
-  final String mensaje;
-  final String? accion;
-
-  BackendResponse({required this.mensaje, this.accion});
-}
-
 class BackendService {
-  final String backendUrl = 'http://192.168.250.21:5000/dialogflow';
+  static const String _baseUrl = "http://<TU_IP_LOCAL_O_NGROK>:5000"; // ← Cámbialo
 
-  Future<BackendResponse> enviarMensaje(String texto) async {
+  /// Envía el texto al backend (que a su vez llama a Dialogflow) y retorna respuesta + estado
+  static Future<Map<String, dynamic>> enviarTexto(String mensaje) async {
+    final url = Uri.parse("$_baseUrl/dialogflow");
+
     try {
       final response = await http.post(
-        Uri.parse(backendUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'mensaje': texto}),
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"mensaje": mensaje}),
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return BackendResponse(
-          mensaje: data['respuesta'] ?? 'Sin respuesta',
-          accion: data['accion'],
-        );
+        return {
+          "respuesta": data["respuesta"] ?? "Sin respuesta",
+          "accion": data["accion"] ?? "",
+          "estado": data["estado"] ?? false,
+        };
       } else {
-        return BackendResponse(mensaje: 'Error del servidor');
+        return {
+          "respuesta": "Error al comunicarse con el servidor.",
+          "accion": "",
+          "estado": false,
+        };
       }
-    } catch (_) {
-      return BackendResponse(mensaje: 'No se pudo conectar');
+    } catch (e) {
+      return {
+        "respuesta": "Error de red: $e",
+        "accion": "",
+        "estado": false,
+      };
     }
   }
 }

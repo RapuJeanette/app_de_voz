@@ -1,26 +1,10 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.example.app_de_voz">
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
         android:label="app_de_voz"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
-
-        <service
-            android:name="id.flutter.flutter_background_service.BackgroundService"
-            android:exported="true"
-            android:permission="android.permission.FOREGROUND_SERVICE"
-            android:foregroundServiceType="microphone"
-            tools:replace="android:exported,android:foregroundServiceType" />
-
-        <service
-            android:name="id.flutter.background_service.BackgroundService"
-            android:exported="false"
-            android:foregroundServiceType="microphone" />
 
         <activity
             android:name=".MainActivity"
