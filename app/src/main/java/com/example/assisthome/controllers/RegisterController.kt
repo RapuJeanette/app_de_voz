@@ -1,9 +1,8 @@
-package com.example.apptopicos.controllers
+package com.example.assisthome.controllers
 
 import android.content.Context
 import android.util.Log
 import java.io.File
-import java.io.PrintWriter
 import java.text.SimpleDateFormat
 import java.util.*
 

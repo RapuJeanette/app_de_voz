@@ -1,4 +1,4 @@
-package com.example.apptopicos
+package com.example.assisthome
 
 import org.junit.Test
 

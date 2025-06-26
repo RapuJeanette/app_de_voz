@@ -13,6 +13,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AppTopicos"
+rootProject.name = "AssistHome"
 include(":app")
  

@@ -1,4 +1,4 @@
-package com.example.apptopicos
+package com.example.assisthome
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -16,10 +16,10 @@ import android.os.*
 import android.provider.Settings
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.example.apptopicos.controllers.AutoDesactivityController
-import com.example.apptopicos.controllers.RegisterController
-import com.example.apptopicos.controllers.SOController
-import com.example.apptopicos.views.ViewButtonActivity
+import com.example.assisthome.R
+import com.example.assisthome.controllers.AutoDesactivityController
+import com.example.assisthome.controllers.RegisterController
+import com.example.assisthome.views.ViewButtonActivity
 
 class MyService : Service() {
 
@@ -28,12 +28,11 @@ class MyService : Service() {
     private var Modo: Boolean = false
     private lateinit var registerController: RegisterController
     private lateinit var autodesactivityController: AutoDesactivityController
-    private lateinit var soController: SOController
+
     override fun onCreate() {
         super.onCreate()
         registerController = RegisterController(this)
         autodesactivityController = AutoDesactivityController(this, registerController)
-        soController = SOController(this)
         Log.d("MiApp", "Servicio creado") // Log para servicio creado
 
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -52,7 +51,7 @@ class MyService : Service() {
         )
 
         // Registra el broadcast receiver
-        val filter = IntentFilter("com.example.apptopicos.DESACTIVAR_ESCUCHA")
+        val filter = IntentFilter("com.example.assisthome.DESACTIVAR_ESCUCHA")
         registerReceiver(receiver, filter)
     }
 
@@ -60,7 +59,7 @@ class MyService : Service() {
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
-                "com.example.apptopicos.DESACTIVAR_ESCUCHA" -> {
+                "com.example.assisthome.DESACTIVAR_ESCUCHA" -> {
                     Modo = !Modo
                     desactivar_escucha() // Llama a la función cuando recibas el broadcast
                 }
@@ -129,6 +128,7 @@ class MyService : Service() {
 
         registerController.logEvent("Modo escucha Activado")
     }
+
     private fun señalSonora(){
         if(Modo) {
             val soundUri =
@@ -146,10 +146,9 @@ class MyService : Service() {
         Log.d("MiApp", "Desactivando escucha...")
         registerController.logEvent("Desactivando escucha")
         // Enviar broadcast para cerrar el Activity
-        val intent = Intent("com.example.apptopicos.CLOSE_ACTIVITY")
+        val intent = Intent("com.example.assisthome.CLOSE_ACTIVITY")
         sendBroadcast(intent)
-        //Apagar camara si es que esta activa
-        soController.CamaraOff()
+
         // Apagar el registro y la auto-desactivación
         registerController.offRegister()
         autodesactivityController.offAutodesactivity()
@@ -179,14 +178,16 @@ class MyService : Service() {
         val notification = NotificationCompat.Builder(this, "running_channel")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle("Servicio activo")
-            .setContentText("Monitoreando el volumen")
+            .setContentText("Monitoreando el botón de volumen")
             .build()
         startForeground(1, notification)
         Log.d("MiApp", "Notificación mostrada") // Log para notificación
     }
+
     override fun onBind(intent: Intent): IBinder? {
         return null
     }
+
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(receiver) // Desregistrar el receptor

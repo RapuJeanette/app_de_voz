@@ -1,4 +1,4 @@
-package com.example.apptopicos
+package com.example.assisthome
 
 import android.content.BroadcastReceiver
 import android.content.Context

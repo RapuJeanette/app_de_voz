@@ -1,4 +1,4 @@
-package com.example.apptopicos.controllers
+package com.example.assisthome.controllers
 
 import android.content.Context
 import android.content.Intent
@@ -51,7 +51,7 @@ class AutoDesactivityController(
                         Log.d("MiApp", "Inactividad detectada: Desactivando escucha")
 
                         // Enviar broadcast para desactivar escucha
-                        val intent = Intent("com.example.apptopicos.DESACTIVAR_ESCUCHA")
+                        val intent = Intent("com.example.assisthome.DESACTIVAR_ESCUCHA")
                         context.sendBroadcast(intent)
                     } else {
                         Log.d("MiApp", "Última actividad hace ${timeSinceLastActivity / 1000} segundos.")
@@ -60,7 +60,7 @@ class AutoDesactivityController(
                 } else {
                     // Si no hay eventos, se asume que ya ha pasado mucho tiempo (ejemplo: inactividad desde el inicio)
                     Log.d("MiApp", "No se encontraron eventos previos. Desactivando escucha.")
-                    val intent = Intent("com.example.apptopicos.DESACTIVAR_ESCUCHA")
+                    val intent = Intent("com.example.assisthome.DESACTIVAR_ESCUCHA")
                     context.sendBroadcast(intent)
                 }
             }

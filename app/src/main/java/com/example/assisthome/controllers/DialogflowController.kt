@@ -1,7 +1,7 @@
-package com.example.apptopicos.controllers
+package com.example.assisthome.controllers
 
 import android.content.Context
-import com.example.apptopicos.R
+import com.example.assisthome.R
 import com.google.api.gax.core.FixedCredentialsProvider
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.dialogflow.v2.*
@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 
 class DialogflowController(private val context: Context) {
     private suspend fun getSession(): SessionsClient? {
-        val stream: InputStream = context.resources.openRawResource(R.raw.dialogflow_credentials)
+        val stream: InputStream = context.resources.openRawResource(R.raw.dialogflow_credentials) // Mantiene el nombre original
         val credentials = GoogleCredentials.fromStream(stream)
         val settings = SessionsSettings.newBuilder()
             .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
@@ -40,7 +40,7 @@ class DialogflowController(private val context: Context) {
 
     suspend fun sendMessageToDialogflow(message: String): String? {
         // Verificar si el mensaje es vacío o nulo antes de enviarlo
-        Log.d("DialogflowController", "Llegó: $message")
+        Log.d("DialogflowController", "Mensaje enviado a control de voz: $message")
         if (message.isBlank()) {
             Log.e("DialogflowController", "El mensaje de entrada está vacío")
             return null
@@ -48,14 +48,14 @@ class DialogflowController(private val context: Context) {
 
         return withContext(Dispatchers.IO) {
             val sessionClient = getSession() ?: return@withContext null
-            val session = SessionName.of("detector-de-billetes-vtnl", "1")  // Asegúrate de que estos valores sean correctos
+            val session = SessionName.of("controlvoz-vwye", "1")  // Actualizado con el nuevo project_id
             val queryInput = QueryInput.newBuilder().apply {
                 text = TextInput.newBuilder().setText(message).setLanguageCode("es-ES").build()
             }.build()
 
             val response = sessionClient.detectIntent(session, queryInput)
+            Log.d("DialogflowController", "Respuesta de Dialogflow: ${response.queryResult.fulfillmentText}")
             response.queryResult.fulfillmentText
         }
     }
-
 }
