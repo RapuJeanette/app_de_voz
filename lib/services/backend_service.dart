@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class BackendService {
-  static const String _baseUrl = "http://192.168.0.8:5000"; // ← Cámbialo
+  static const String _baseUrl = "http://192.168.1.5:5000"; // ← Cámbialo
 
   /// Envía el texto al backend (que a su vez llama a Dialogflow) y retorna respuesta + estado
   static Future<Map<String, dynamic>> enviarTexto(String mensaje) async {
